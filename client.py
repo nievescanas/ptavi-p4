@@ -3,17 +3,18 @@
 """
 Programa cliente UDP que abre un socket a un servidor
 """
-
+import sys
 import socket
 
-# Constantes. Dirección IP del servidor y contenido a enviar
-SERVER = 'localhost'
-PORT = 6001
-LINE = '¡Hola mundo!'
+import urllib.request
+
+LINE=' '
+for palabra in sys.argv[3:]:
+     LINE += ('{p}{espacio}'.format(p=palabra, espacio =' '))
 
 # Creamos el socket, lo configuramos y lo atamos a un servidor/puerto
 with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as my_socket:
-    my_socket.connect((SERVER, PORT))
+    my_socket.connect((sys.argv[1],int(sys.argv[2])))
     print("Enviando:", LINE)
     my_socket.send(bytes(LINE, 'utf-8') + b'\r\n')
     data = my_socket.recv(1024)
