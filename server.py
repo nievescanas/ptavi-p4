@@ -7,21 +7,40 @@ import sys
 import socketserver
 import json
 import time
+import os.path as path
 
 
 class SIPRegisterHandler(socketserver.DatagramRequestHandler):
     c_dicc = {}
 
+    def json2registered(self):
+        if path.exists('registered.json'):
+            with open('registered.json') as d_file:
+                data = json.load(d_file)
+                self.c_dicc = data
+
     def register2json(self, name='registered.json'):
         with open(name, 'w') as outfile:
             json.dump(self.c_dicc, outfile, separators=(',', ':'), indent="")
+
+    def caducidad(self):
+        tmp_list = []
+        for usuario in self.c_dicc:
+            caducidad = self.c_dicc[usuario][1]
+            now = time.ctime(time.time())
+            if caducidad <= now:
+                tmp_list.append(usuario)
+        for usuario in tmp_list:
+            del self.c_dicc[usuario]
 
     def handle(self):
         """
         handle method of the server class
         (all requests will be handled by this method)
         """
-        self.wfile.write(b"Hemos recibido tu peticion")
+        if not self.c_dicc:
+            self.json2registered()
+
         for line in self.rfile:
             if not line or line.decode('utf-8') == "\r\n":
                 continue
@@ -29,6 +48,7 @@ class SIPRegisterHandler(socketserver.DatagramRequestHandler):
                 print("El cliente nos manda ", line.decode('utf-8'))
                 metodo = (line.decode('utf-8').split())
                 ip = self.client_address[0]
+                self.caducidad()
 
                 if metodo[0] == 'REGISTER':
                     correo = metodo[1][metodo[1].rfind(':')+1:]
@@ -41,25 +61,13 @@ class SIPRegisterHandler(socketserver.DatagramRequestHandler):
                         self.c_dicc[correo] = info
 
                     elif metodo[1] == '0':
-                        del self.c_dicc[correo]
+                        if correo in self.c_dicc:
+                            del self.c_dicc[correo]
 
-                lista = [self.c_dicc]
-                print(lista)
-
-        for posicion in lista:
-            for dicc in posicion:
-                caducidad = self.c_dicc[dicc][1]
-                now = time.ctime(time.time())
-                if caducidad <= now:
-                    del self.c_dicc[dicc]
-                    break
-
-        def register2json(self, name='registered.json'):
-            with open(name, 'w') as outfile:
-                json.dump(self.c_dicc, outfile, separators=(',', ':'))
+                print(self.c_dicc)
+                self.register2json()
 
         print(self.client_address)
-        self.register2json()
 
 
 if __name__ == "__main__":
