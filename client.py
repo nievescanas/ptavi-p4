@@ -15,7 +15,8 @@ except IndexError:
     sys.exit("Usage: client.py ip puerto register sip_address expires_value")
 
 if sys.argv[3] == 'register':
-    LINE = str.upper(sys.argv[3]) + ' sip:' + sys.argv[4] + ' SIP/2.0\n\r\n\r '
+    LINE = str.upper(sys.argv[3]) + ' sip:' + sys.argv[4] + ' SIP/2.0\r\n'
+    LINE += 'Expires: ' + sys.argv[5] + '\r\n\r\n'
 
 elif sys.argv[3] == 'REGISTER':
     for palabra in sys.argv[3:]:
