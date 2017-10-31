@@ -13,15 +13,24 @@ import os.path as path
 class SIPRegisterHandler(socketserver.DatagramRequestHandler):
     c_dicc = {}
 
+    """
+    Comprueba si existe el fichero y lo utiliza como diccionario
+    """
     def json2registered(self):
         if path.exists('registered.json'):
             with open('registered.json') as d_file:
                 data = json.load(d_file)
                 self.c_dicc = data
+    """
+    Crea y escribe un fichero json
+    """
 
     def register2json(self, name='registered.json'):
         with open(name, 'w') as outfile:
             json.dump(self.c_dicc, outfile, separators=(',', ':'), indent="")
+    """
+    Comprueba y borra los usuarios caducados
+    """
 
     def caducidad(self):
         tmp_list = []
@@ -45,14 +54,13 @@ class SIPRegisterHandler(socketserver.DatagramRequestHandler):
             if not line or line.decode('utf-8') == "\r\n":
                 continue
             else:
-                print("El cliente nos manda ", line.decode('utf-8'))
                 metodo = (line.decode('utf-8').split())
                 ip = self.client_address[0]
                 self.caducidad()
 
                 if metodo[0] == 'REGISTER':
                     correo = metodo[1][metodo[1].rfind(':')+1:]
-                    self.wfile.write(b' SIP/2.0 200 OK\r\n\r\n')
+                    self.wfile.write(b'SIP/2.0 200 OK\r\n\r\n')
 
                 elif metodo[0] == 'Expires:':
                     if metodo[1] > '0':
@@ -64,7 +72,6 @@ class SIPRegisterHandler(socketserver.DatagramRequestHandler):
                         if correo in self.c_dicc:
                             del self.c_dicc[correo]
 
-                print(self.c_dicc)
                 self.register2json()
 
         print(self.client_address)
@@ -74,8 +81,6 @@ if __name__ == "__main__":
     # Listens at localhost ('') port 6001
     # and calls the EchoHandler class to manage the request
     serv = socketserver.UDPServer(('', 5060), SIPRegisterHandler)
-
-    print("Lanzando servidor UDP de eco...")
 
     try:
         serv.serve_forever()
